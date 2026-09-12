@@ -383,6 +383,7 @@
   let activeFilters = {};
   let activeGenre = "";
   let sortMode = "recent"; // "recent" = derniers ajoutés d'abord, "alpha" = ordre alphabétique, "annee" = par année
+  let alphaDirection = "asc"; // "asc" = A→Z, "desc" = Z→A
   let anneeDirection = "asc"; // "asc" = plus ancien d'abord, "desc" = plus récent d'abord
   let viewMode = window.matchMedia("(min-width: 900px)").matches ? "table" : "cards";
 
@@ -482,8 +483,16 @@
 
     const alphaBtn = document.createElement("button");
     alphaBtn.className = "sort-btn" + (sortMode === "alpha" ? " active" : "");
-    alphaBtn.textContent = "A → Z";
-    alphaBtn.addEventListener("click", () => { sortMode = "alpha"; buildSortControl(); render(); });
+    alphaBtn.textContent = sortMode === "alpha" ? (alphaDirection === "asc" ? "A → Z" : "Z → A") : "A → Z";
+    alphaBtn.addEventListener("click", () => {
+      if (sortMode === "alpha") {
+        alphaDirection = alphaDirection === "asc" ? "desc" : "asc";
+      } else {
+        sortMode = "alpha";
+      }
+      buildSortControl();
+      render();
+    });
 
     const anneeBtn = document.createElement("button");
     anneeBtn.className = "sort-btn" + (sortMode === "annee" ? " active" : "");
@@ -557,7 +566,8 @@
     const results = films.filter(f => matchesSearch(f, query) && matchesFilters(f));
 
     if (sortMode === "alpha") {
-      results.sort((a, b) => (a["Titre FR"] || "").toString().localeCompare((b["Titre FR"] || "").toString(), "fr", { sensitivity: "base" }));
+      const cmp = (a, b) => (a["Titre FR"] || "").toString().localeCompare((b["Titre FR"] || "").toString(), "fr", { sensitivity: "base" });
+      results.sort((a, b) => alphaDirection === "asc" ? cmp(a, b) : -cmp(a, b));
     } else if (sortMode === "annee") {
       results.sort((a, b) => {
         const diff = (parseInt(a["Année"]) || 0) - (parseInt(b["Année"]) || 0);
