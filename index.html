@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#12141a">
+<title>MYDVD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141a;
+    --surface:#1c1f27;
+    --surface-hover:#242833;
+    --text:#eceef1;
+    --text-muted:#9aa1ad;
+    --accent:#d1a34a;
+    --accent-soft:rgba(209,163,74,0.14);
+    --border:#2a2e38;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px;}
+  .wrap.wide{max-width:1200px;}
+
+  header{
+    padding:28px 0 18px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
+  }
+  #count{
+    color:var(--text-muted);
+    font-size:14px;
+    margin:0;
+  }
+
+  #search{
+    width:100%;
+    padding:12px 16px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+    margin-bottom:12px;
+  }
+  #search::placeholder{color:var(--text-muted);}
+  #search:focus{border-color:var(--accent);}
+
+  .genres{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:12px;
+    scrollbar-width:none;
+  }
+  .genres::-webkit-scrollbar{display:none;}
+  .genre-chip{
+    flex:0 0 auto;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:7px 13px;
+    font-size:13px;
+    font-family:inherit;
+    color:var(--text-muted);
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .genre-chip .n{margin-left:5px;font-size:11px;opacity:0.8;}
+  .genre-chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+  .sort-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .sort-label{font-size:12px;color:var(--text-muted);}
+  .sort-btn{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    border-radius:8px;
+    padding:6px 11px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .sort-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+  .filters{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:20px;
+    scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none;}
+  .filters select{
+    flex:0 0 auto;
+    background:var(--surface);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .filters select:focus{outline:none;border-color:var(--accent);}
+  #reset-filters{
+    flex:0 0 auto;
+    background:none;
+    color:var(--accent);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:13px;
+    font-family:inherit;
+  }
+
+  .view-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .view-btn{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    border-radius:8px;
+    padding:6px 11px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .view-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+  .table-scroll{overflow-x:auto;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  thead th{
+    text-align:left;
+    padding:10px 12px;
+    color:var(--text-muted);
+    font-weight:500;
+    font-size:12px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:var(--surface-hover);}
+  .t-titre{font-family:'Fraunces',serif;font-weight:600;white-space:nowrap;cursor:pointer;}
+  .t-titre:hover{color:var(--accent);}
+  .t-orig{font-style:italic;color:var(--text-muted);font-size:12px;font-family:'Inter',sans-serif;font-weight:400;}
+  .t-trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    cursor:pointer;
+  }
+  .card:active{background:var(--surface-hover);}
+  .card-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .titre-fr{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:17px;
+    line-height:1.3;
+    cursor:pointer;
+  }
+  .titre-fr:active{opacity:0.7;}
+  .annee{color:var(--text-muted);font-size:14px;white-space:nowrap;}
+  .titre-orig{
+    font-style:italic;
+    color:var(--text-muted);
+    font-size:14px;
+    margin-top:2px;
+  }
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .tag{
+    font-size:12px;
+    padding:3px 9px;
+    border-radius:999px;
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .tag.muted{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+
+  .card-facts{
+    margin-top:10px;
+    font-size:13.5px;
+    color:var(--text-muted);
+  }
+  .card-facts p{margin:3px 0;}
+  .card-facts b{color:var(--text);font-weight:600;font-size:0.82em;}
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(8,9,12,0.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    max-width:460px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    padding:26px 22px;
+    position:relative;
+  }
+  .modal-close{
+    position:absolute;
+    top:10px;
+    right:12px;
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:26px;
+    line-height:1;
+    cursor:pointer;
+    padding:6px;
+  }
+  .modal-titre-fr{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:22px;
+    line-height:1.25;
+    padding-right:24px;
+  }
+  .modal-titre-orig{
+    font-style:italic;
+    color:var(--text-muted);
+    font-size:15px;
+    margin-top:3px;
+  }
+  .modal-meta{
+    color:var(--accent);
+    font-size:13px;
+    margin-top:10px;
+  }
+  .modal-fields{
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+    font-size:14.5px;
+  }
+  .modal-fields p{margin:8px 0;color:var(--text-muted);}
+  .modal-fields b{display:block;color:var(--text);font-weight:500;font-size:12px;text-transform:none;margin-bottom:1px;}
+
+  #empty{
+    text-align:center;
+    color:var(--text-muted);
+    padding:60px 20px;
+    font-size:14px;
+  }
+  #loading{
+    text-align:center;
+    color:var(--text-muted);
+    padding:60px 20px;
+  }
+
+  @media (max-width: 480px){
+    .wrap{
+      max-width:none;
+      width:100%;
+      padding-left:calc(5% + env(safe-area-inset-left));
+      padding-right:calc(5% + env(safe-area-inset-right));
+    }
+    h1{font-size:30px;}
+    .card{padding:16px 15px;}
+    .tags{gap:6px;}
+    .titre-fr{font-size:25px;}
+    .titre-orig{font-size:18px;}
+    .annee{font-size:17px;}
+    .tag{font-size:15px;padding:5px 11px;}
+    .card-facts{font-size:17px;}
+    .card-facts p{font-size:17px;}
+    #search{font-size:18px;padding:15px 18px;}
+    #count{font-size:17px;}
+    .genre-chip{font-size:15px;padding:8px 14px;}
+    .sort-label, .sort-btn, .view-btn{font-size:15px;}
+
+    .modal-overlay{padding:8px;}
+    .modal-card{
+      width:80%;
+      max-width:none;
+      padding:24px 18px;
+      max-height:88vh;
+    }
+    .modal-titre-fr{font-size:24px;}
+    .modal-titre-orig{font-size:16px;}
+    .modal-meta{font-size:14px;}
+    .modal-fields{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MYDVD</h1>
+    <p id="count">Chargement...</p>
+  </header>
+
+  <input type="text" id="search" placeholder="Rechercher un titre, un réalisateur, un pays...">
+  <div class="view-toggle" id="viewToggle"></div>
+  <div class="genres" id="genres"></div>
+  <div class="sort-row" id="sortRow"></div>
+  <div class="filters" id="filters"></div>
+
+  <div id="loading">Chargement de la collection...</div>
+  <div id="list"></div>
+  <div class="table-scroll" id="tableWrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th>Titre</th><th>Année</th><th>Genre</th><th>Réalisateur</th><th>Acteurs</th>
+          <th>Pays d'origine</th><th>Pays du DVD</th><th>Support</th><th>Durée</th><th>Versions</th>
+          <th>Vu</th><th>Prêté</th><th>Commentaire</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div id="empty" style="display:none">Aucun film ne correspond à ta recherche.</div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Fermer">&times;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbxZgdYCXFHuKnYKaigH2lUrJTo6GEba_S7-4ZnrWDWgpgH3EDNl6EQ_4xX_jW-FdipK6Q/exec";
+
+  // Colonnes utilisées pour construire des menus déroulants de filtre.
+  // Pour ajouter un nouveau filtre plus tard : ajoute simplement le nom exact
+  // de la colonne (tel qu'il apparaît dans le Sheet) dans ce tableau.
+  // Le Genre a son propre système de boutons plus bas, inutile de le remettre ici.
+  const FILTER_COLUMNS = ["Support", "Vu", "Prêté"];
+
+  let films = [];
+  let activeFilters = {};
+  let activeGenre = "";
+  let sortMode = "recent"; // "recent" = derniers ajoutés d'abord, "alpha" = ordre alphabétique
+  let viewMode = window.matchMedia("(min-width: 900px)").matches ? "table" : "cards";
+
+  const listEl = document.getElementById("list");
+  const countEl = document.getElementById("count");
+  const loadingEl = document.getElementById("loading");
+  const emptyEl = document.getElementById("empty");
+  const searchEl = document.getElementById("search");
+  const filtersEl = document.getElementById("filters");
+  const genresEl = document.getElementById("genres");
+  const sortRowEl = document.getElementById("sortRow");
+  const viewToggleEl = document.getElementById("viewToggle");
+  const tableWrapEl = document.getElementById("tableWrap");
+  const tableBodyEl = document.getElementById("tableBody");
+  const wrapEl = document.querySelector(".wrap");
+  const modalOverlayEl = document.getElementById("modalOverlay");
+  const modalBodyEl = document.getElementById("modalBody");
+  const modalCloseEl = document.getElementById("modalClose");
+
+  fetch(SHEET_URL)
+    .then(r => r.json())
+    .then(data => {
+      // __idx garde la trace de l'ordre d'origine (= ordre d'ajout dans le Sheet)
+      // pour pouvoir toujours retrouver "les derniers ajoutés" même après un tri alphabétique.
+      films = data.map((f, i) => ({ ...f, __idx: i }));
+      loadingEl.style.display = "none";
+      buildViewToggle();
+      buildGenreButtons();
+      buildSortControl();
+      buildFilters();
+      render();
+    })
+    .catch(err => {
+      loadingEl.textContent = "Impossible de charger la collection. Vérifie ta connexion ou l'URL du script.";
+      console.error(err);
+    });
+
+  function buildViewToggle(){
+    viewToggleEl.innerHTML = "";
+    const cardsBtn = document.createElement("button");
+    cardsBtn.className = "view-btn" + (viewMode === "cards" ? " active" : "");
+    cardsBtn.textContent = "iPhone";
+    cardsBtn.addEventListener("click", () => { viewMode = "cards"; buildViewToggle(); render(); });
+
+    const tableBtn = document.createElement("button");
+    tableBtn.className = "view-btn" + (viewMode === "table" ? " active" : "");
+    tableBtn.textContent = "Laptop";
+    tableBtn.addEventListener("click", () => { viewMode = "table"; buildViewToggle(); render(); });
+
+    viewToggleEl.appendChild(cardsBtn);
+    viewToggleEl.appendChild(tableBtn);
+  }
+
+  function buildGenreButtons(){
+    genresEl.innerHTML = "";
+    const counts = {};
+    films.forEach(f => {
+      const g = (f["Genre"] || "").toString().trim();
+      if (g) counts[g] = (counts[g] || 0) + 1;
+    });
+    const genres = Object.keys(counts).sort((a, b) => a.localeCompare(b, "fr"));
+
+    const allChip = document.createElement("button");
+    allChip.className = "genre-chip" + (activeGenre === "" ? " active" : "");
+    allChip.innerHTML = `Tous <span class="n">${films.length}</span>`;
+    allChip.addEventListener("click", () => {
+      activeGenre = "";
+      buildGenreButtons();
+      render();
+    });
+    genresEl.appendChild(allChip);
+
+    genres.forEach(g => {
+      const chip = document.createElement("button");
+      chip.className = "genre-chip" + (activeGenre === g ? " active" : "");
+      chip.innerHTML = `${g} <span class="n">${counts[g]}</span>`;
+      chip.addEventListener("click", () => {
+        activeGenre = (activeGenre === g ? "" : g);
+        buildGenreButtons();
+        render();
+      });
+      genresEl.appendChild(chip);
+    });
+  }
+
+  function buildSortControl(){
+    sortRowEl.innerHTML = "";
+    const label = document.createElement("span");
+    label.className = "sort-label";
+    label.textContent = "Trier :";
+    sortRowEl.appendChild(label);
+
+    const recentBtn = document.createElement("button");
+    recentBtn.className = "sort-btn" + (sortMode === "recent" ? " active" : "");
+    recentBtn.textContent = "Récents";
+    recentBtn.addEventListener("click", () => { sortMode = "recent"; buildSortControl(); render(); });
+
+    const alphaBtn = document.createElement("button");
+    alphaBtn.className = "sort-btn" + (sortMode === "alpha" ? " active" : "");
+    alphaBtn.textContent = "A → Z";
+    alphaBtn.addEventListener("click", () => { sortMode = "alpha"; buildSortControl(); render(); });
+
+    sortRowEl.appendChild(recentBtn);
+    sortRowEl.appendChild(alphaBtn);
+  }
+
+  function buildFilters(){
+    filtersEl.innerHTML = "";
+    FILTER_COLUMNS.forEach(col => {
+      const valueCounts = {};
+      films.forEach(f => {
+        const v = (f[col] ?? "").toString().trim();
+        if (v !== "") valueCounts[v] = (valueCounts[v] || 0) + 1;
+      });
+      const values = Object.keys(valueCounts).sort();
+      if (values.length === 0) return;
+      const select = document.createElement("select");
+      select.innerHTML = `<option value="">${col}</option>` +
+        values.map(v => `<option value="${v}">${v}${col === "Support" ? " (" + valueCounts[v] + ")" : ""}</option>`).join("");
+      select.addEventListener("change", () => {
+        activeFilters[col] = select.value;
+        render();
+      });
+      filtersEl.appendChild(select);
+    });
+    const resetBtn = document.createElement("button");
+    resetBtn.id = "reset-filters";
+    resetBtn.textContent = "Réinitialiser";
+    resetBtn.addEventListener("click", () => {
+      activeFilters = {};
+      activeGenre = "";
+      searchEl.value = "";
+      filtersEl.querySelectorAll("select").forEach(s => s.value = "");
+      buildGenreButtons();
+      render();
+    });
+    filtersEl.appendChild(resetBtn);
+  }
+
+  searchEl.addEventListener("input", render);
+
+  function matchesSearch(film, query){
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return Object.values(film).some(v => v !== null && v !== undefined && v.toString().toLowerCase().includes(q));
+  }
+
+  function matchesFilters(film){
+    if (activeGenre && (film["Genre"] || "").toString().trim() !== activeGenre) return false;
+    return Object.entries(activeFilters).every(([col, val]) => {
+      if (!val) return true;
+      return (film[col] ?? "").toString().trim() === val;
+    });
+  }
+
+  function render(){
+    const query = searchEl.value.trim();
+    const results = films.filter(f => matchesSearch(f, query) && matchesFilters(f));
+
+    if (sortMode === "alpha") {
+      results.sort((a, b) => (a["Titre FR"] || "").toString().localeCompare((b["Titre FR"] || "").toString(), "fr", { sensitivity: "base" }));
+    } else {
+      results.sort((a, b) => b.__idx - a.__idx); // ordre d'ajout inversé = derniers ajoutés en premier
+    }
+
+    countEl.textContent = `${results.length} film${results.length > 1 ? "s" : ""} sur ${films.length}`;
+    emptyEl.style.display = results.length === 0 ? "block" : "none";
+
+    if (viewMode === "table") {
+      wrapEl.classList.add("wide");
+      listEl.style.display = "none";
+      tableWrapEl.style.display = results.length ? "block" : "none";
+      renderTable(results);
+    } else {
+      wrapEl.classList.remove("wide");
+      tableWrapEl.style.display = "none";
+      listEl.style.display = results.length ? "block" : "none";
+      renderCards(results);
+    }
+  }
+
+  function openDetail(f){
+    const versions = ["VO","VF","VOST"].filter(v => (f[v]||"").toString().toLowerCase() === "oui").join(" / ");
+    const prete = (f["Prêté"] || "").toString().toLowerCase() === "oui"
+      ? `Oui — ${f["Emprunteur"] || "?"}`
+      : "Non";
+    const meta = [f["Année de sortie"], f["Genre"], f["Pays d'origine"]].filter(Boolean).join(" · ");
+
+    modalBodyEl.innerHTML = `
+      <div class="modal-titre-fr">${f["Titre FR"] || "(sans titre)"}</div>
+      ${f["Titre original"] ? `<div class="modal-titre-orig">${f["Titre original"]}</div>` : ""}
+      ${meta ? `<div class="modal-meta">${meta}</div>` : ""}
+      <div class="modal-fields">
+        ${f["Réalisateur"] ? `<p><b>Réalisateur</b>${f["Réalisateur"]}</p>` : ""}
+        ${f["Acteurs principaux"] ? `<p><b>Acteurs principaux</b>${f["Acteurs principaux"]}</p>` : ""}
+        ${f["Pays du DVD"] ? `<p><b>Pays du DVD</b>${f["Pays du DVD"]}</p>` : ""}
+        ${f["Support"] ? `<p><b>Support</b>${f["Support"]}</p>` : ""}
+        ${f["Durée"] ? `<p><b>Durée</b>${f["Durée"]}</p>` : ""}
+        ${versions ? `<p><b>Versions disponibles</b>${versions}</p>` : ""}
+        ${f["Vu"] ? `<p><b>Vu</b>${f["Vu"]}</p>` : ""}
+        <p><b>Prêté</b>${prete}</p>
+        ${f["Commentaire"] ? `<p><b>Commentaire</b>${f["Commentaire"]}</p>` : ""}
+      </div>
+    `;
+    modalOverlayEl.classList.add("open");
+  }
+
+  function closeModal(){
+    modalOverlayEl.classList.remove("open");
+  }
+
+  modalCloseEl.addEventListener("click", closeModal);
+  modalOverlayEl.addEventListener("click", (e) => {
+    if (e.target === modalOverlayEl) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  function renderCards(results){
+    listEl.innerHTML = "";
+    results.forEach((f) => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const tags = [];
+      if (f["Genre"]) tags.push(`<span class="tag">${f["Genre"]}</span>`);
+      if (f["Pays d'origine"]) tags.push(`<span class="tag muted">${f["Pays d'origine"]}</span>`);
+      if (f["Support"]) tags.push(`<span class="tag muted">${f["Support"]}${f["Durée"] ? " · " + f["Durée"] : ""}</span>`);
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div>
+            <div class="titre-fr">${f["Titre FR"] || "(sans titre)"}</div>
+            <div class="titre-orig">${f["Titre original"] || ""}</div>
+          </div>
+          <div class="annee">${f["Année de sortie"] || ""}</div>
+        </div>
+        <div class="tags">${tags.join("")}</div>
+        <div class="card-facts">
+          ${f["Réalisateur"] ? `<p><b>Réalisateur</b> ${f["Réalisateur"]}</p>` : ""}
+        </div>
+      `;
+
+      card.querySelector(".titre-fr").addEventListener("click", () => openDetail(f));
+
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderTable(results){
+    tableBodyEl.innerHTML = "";
+    results.forEach(f => {
+      const versions = ["VO","VF","VOST"].filter(v => (f[v]||"").toString().toLowerCase() === "oui").join(" / ");
+      const prete = (f["Prêté"] || "").toString().toLowerCase() === "oui"
+        ? `Oui — ${f["Emprunteur"] || "?"}`
+        : (f["Prêté"] || "");
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="t-titre">${f["Titre FR"] || "(sans titre)"}<div class="t-orig">${f["Titre original"] || ""}</div></td>
+        <td>${f["Année de sortie"] || ""}</td>
+        <td>${f["Genre"] || ""}</td>
+        <td>${f["Réalisateur"] || ""}</td>
+        <td class="t-trunc">${f["Acteurs principaux"] || ""}</td>
+        <td>${f["Pays d'origine"] || ""}</td>
+        <td>${f["Pays du DVD"] || ""}</td>
+        <td>${f["Support"] || ""}</td>
+        <td>${f["Durée"] || ""}</td>
+        <td>${versions}</td>
+        <td>${f["Vu"] || ""}</td>
+        <td>${prete}</td>
+        <td class="t-trunc">${f["Commentaire"] || ""}</td>
+      `;
+      tr.querySelector(".t-titre").addEventListener("click", () => openDetail(f));
+      tableBodyEl.appendChild(tr);
+    });
+  }
+</script>
+</body>
+</html>
