@@ -353,8 +353,8 @@
       <thead>
         <tr>
           <th>Titre</th><th>Année</th><th>Genre</th><th>Réalisateur</th><th>Acteurs</th>
-          <th>Pays d'origine</th><th>Pays du DVD</th><th>Support</th><th>Durée</th><th>Versions</th>
-          <th>Vu</th><th>Prêté</th><th>Commentaire</th>
+          <th>Pays</th><th>Pays Ed.</th><th>Support</th><th>Durée</th><th>Versions</th>
+          <th>Vu</th><th>Commentaire</th><th>In</th><th>By</th><th>Série</th><th>Version</th><th>N&B/C</th><th>Coffret</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -377,12 +377,13 @@
   // Pour ajouter un nouveau filtre plus tard : ajoute simplement le nom exact
   // de la colonne (tel qu'il apparaît dans le Sheet) dans ce tableau.
   // Le Genre a son propre système de boutons plus bas, inutile de le remettre ici.
-  const FILTER_COLUMNS = ["Support", "Vu", "Prêté"];
+  const FILTER_COLUMNS = ["Support", "Vu", "In"];
 
   let films = [];
   let activeFilters = {};
   let activeGenre = "";
-  let sortMode = "recent"; // "recent" = derniers ajoutés d'abord, "alpha" = ordre alphabétique
+  let sortMode = "recent"; // "recent" = derniers ajoutés d'abord, "alpha" = ordre alphabétique, "annee" = par année
+  let anneeDirection = "asc"; // "asc" = plus ancien d'abord, "desc" = plus récent d'abord
   let viewMode = window.matchMedia("(min-width: 900px)").matches ? "table" : "cards";
 
   const listEl = document.getElementById("list");
@@ -484,8 +485,22 @@
     alphaBtn.textContent = "A → Z";
     alphaBtn.addEventListener("click", () => { sortMode = "alpha"; buildSortControl(); render(); });
 
+    const anneeBtn = document.createElement("button");
+    anneeBtn.className = "sort-btn" + (sortMode === "annee" ? " active" : "");
+    anneeBtn.textContent = "Année " + (sortMode === "annee" ? (anneeDirection === "asc" ? "↑" : "↓") : "");
+    anneeBtn.addEventListener("click", () => {
+      if (sortMode === "annee") {
+        anneeDirection = anneeDirection === "asc" ? "desc" : "asc";
+      } else {
+        sortMode = "annee";
+      }
+      buildSortControl();
+      render();
+    });
+
     sortRowEl.appendChild(recentBtn);
     sortRowEl.appendChild(alphaBtn);
+    sortRowEl.appendChild(anneeBtn);
   }
 
   function buildFilters(){
@@ -543,6 +558,11 @@
 
     if (sortMode === "alpha") {
       results.sort((a, b) => (a["Titre FR"] || "").toString().localeCompare((b["Titre FR"] || "").toString(), "fr", { sensitivity: "base" }));
+    } else if (sortMode === "annee") {
+      results.sort((a, b) => {
+        const diff = (parseInt(a["Année"]) || 0) - (parseInt(b["Année"]) || 0);
+        return anneeDirection === "asc" ? diff : -diff;
+      });
     } else {
       results.sort((a, b) => b.__idx - a.__idx); // ordre d'ajout inversé = derniers ajoutés en premier
     }
@@ -565,10 +585,10 @@
 
   function openDetail(f){
     const versions = ["VO","VF","VOST"].filter(v => (f[v]||"").toString().toLowerCase() === "oui").join(" / ");
-    const prete = (f["Prêté"] || "").toString().toLowerCase() === "oui"
-      ? `Oui — ${f["Emprunteur"] || "?"}`
+    const prete = (f["In"] || "").toString().toLowerCase() === "oui"
+      ? `Oui — ${f["By"] || "?"}`
       : "Non";
-    const meta = [f["Année de sortie"], f["Genre"], f["Pays d'origine"]].filter(Boolean).join(" · ");
+    const meta = [f["Année"], f["Genre"], f["Pays"]].filter(Boolean).join(" · ");
 
     modalBodyEl.innerHTML = `
       <div class="modal-titre-fr">${f["Titre FR"] || "(sans titre)"}</div>
@@ -576,11 +596,15 @@
       ${meta ? `<div class="modal-meta">${meta}</div>` : ""}
       <div class="modal-fields">
         ${f["Réalisateur"] ? `<p><b>Réalisateur</b>${f["Réalisateur"]}</p>` : ""}
-        ${f["Acteurs principaux"] ? `<p><b>Acteurs principaux</b>${f["Acteurs principaux"]}</p>` : ""}
-        ${f["Pays du DVD"] ? `<p><b>Pays du DVD</b>${f["Pays du DVD"]}</p>` : ""}
+        ${f["Acteurs"] ? `<p><b>Acteurs</b>${f["Acteurs"]}</p>` : ""}
+        ${f["Pays Ed."] ? `<p><b>Pays éd.</b>${f["Pays Ed."]}</p>` : ""}
         ${f["Support"] ? `<p><b>Support</b>${f["Support"]}</p>` : ""}
         ${f["Durée"] ? `<p><b>Durée</b>${f["Durée"]}</p>` : ""}
         ${versions ? `<p><b>Versions disponibles</b>${versions}</p>` : ""}
+        ${f["N&B/C"] ? `<p><b>Noir & blanc / Couleur</b>${f["N&B/C"]}</p>` : ""}
+        ${f["Série"] ? `<p><b>Série</b>${f["Série"]}</p>` : ""}
+        ${f["Version"] ? `<p><b>Version</b>${f["Version"]}</p>` : ""}
+        ${f["Coffret"] ? `<p><b>Coffret</b>${f["Coffret"]}</p>` : ""}
         ${f["Vu"] ? `<p><b>Vu</b>${f["Vu"]}</p>` : ""}
         <p><b>Prêté</b>${prete}</p>
         ${f["Commentaire"] ? `<p><b>Commentaire</b>${f["Commentaire"]}</p>` : ""}
@@ -609,7 +633,7 @@
 
       const tags = [];
       if (f["Genre"]) tags.push(`<span class="tag">${f["Genre"]}</span>`);
-      if (f["Pays d'origine"]) tags.push(`<span class="tag muted">${f["Pays d'origine"]}</span>`);
+      if (f["Pays"]) tags.push(`<span class="tag muted">${f["Pays"]}</span>`);
       if (f["Support"]) tags.push(`<span class="tag muted">${f["Support"]}${f["Durée"] ? " · " + f["Durée"] : ""}</span>`);
 
       card.innerHTML = `
@@ -618,7 +642,7 @@
             <div class="titre-fr">${f["Titre FR"] || "(sans titre)"}</div>
             <div class="titre-orig">${f["Titre original"] || ""}</div>
           </div>
-          <div class="annee">${f["Année de sortie"] || ""}</div>
+          <div class="annee">${f["Année"] || ""}</div>
         </div>
         <div class="tags">${tags.join("")}</div>
         <div class="card-facts">
@@ -636,25 +660,27 @@
     tableBodyEl.innerHTML = "";
     results.forEach(f => {
       const versions = ["VO","VF","VOST"].filter(v => (f[v]||"").toString().toLowerCase() === "oui").join(" / ");
-      const prete = (f["Prêté"] || "").toString().toLowerCase() === "oui"
-        ? `Oui — ${f["Emprunteur"] || "?"}`
-        : (f["Prêté"] || "");
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="t-titre">${f["Titre FR"] || "(sans titre)"}<div class="t-orig">${f["Titre original"] || ""}</div></td>
-        <td>${f["Année de sortie"] || ""}</td>
+        <td>${f["Année"] || ""}</td>
         <td>${f["Genre"] || ""}</td>
         <td>${f["Réalisateur"] || ""}</td>
-        <td class="t-trunc">${f["Acteurs principaux"] || ""}</td>
-        <td>${f["Pays d'origine"] || ""}</td>
-        <td>${f["Pays du DVD"] || ""}</td>
+        <td class="t-trunc">${f["Acteurs"] || ""}</td>
+        <td>${f["Pays"] || ""}</td>
+        <td>${f["Pays Ed."] || ""}</td>
         <td>${f["Support"] || ""}</td>
         <td>${f["Durée"] || ""}</td>
         <td>${versions}</td>
         <td>${f["Vu"] || ""}</td>
-        <td>${prete}</td>
         <td class="t-trunc">${f["Commentaire"] || ""}</td>
+        <td>${f["In"] || ""}</td>
+        <td>${f["By"] || ""}</td>
+        <td>${f["Série"] || ""}</td>
+        <td>${f["Version"] || ""}</td>
+        <td>${f["N&B/C"] || ""}</td>
+        <td>${f["Coffret"] || ""}</td>
       `;
       tr.querySelector(".t-titre").addEventListener("click", () => openDetail(f));
       tableBodyEl.appendChild(tr);
